@@ -57,7 +57,31 @@ fn main() {
     write!(&mut phf, "pub static MAP: phf::Map<&'static [u8], unsafe fn(*mut JSContext, HandleObject)> = ").unwrap();
     map.build(&mut phf).unwrap();
     write!(&mut phf, ";\n").unwrap();
+
+    let mut extensions_map: phf_codegen::Map<String> = phf_codegen::Map::new();
+    register<ext::oesstandardderivatives::OESStandardDerivatives>(extensions_map);
+    let phf_extensions = PathBuf::from(env::var_os("OUT_DIR").unwrap()).join("phf_extensions.rs");
+    let mut phf_extensions = File::create(&phf_extensions).unwrap();
+    write!(&mut phf_extensions, "pub static EXTENSIONS_MAP: phf::Map<String, Box<WebGLExtensionWrapper>> = ").unwrap();
+    extensions_map.build(&mut phf_extensions).unwrap();
+    write!(&mut phf_extensions, ";\n").unwrap();
 }
+
+pub fn register<T:'static + WebGLExtension>(mut map: phf_codegen::Map<String>) {
+    let name = T::name().to_uppercase();
+    map.entry(name, Box::new(TypedWebGLExtensionWrapper::<T>::new()));
+    //self.extensions.borrow_mut().insert(name, Box::new(TypedWebGLExtensionWrapper::<T>::new()));
+}
+
+/*
+fn register_all_extensions(&self) {
+    self.register::<ext::oesstandardderivatives::OESStandardDerivatives>();
+    self.register::<ext::oestexturefloat::OESTextureFloat>();
+    self.register::<ext::oestexturefloatlinear::OESTextureFloatLinear>();
+    self.register::<ext::oestexturehalffloat::OESTextureHalfFloat>();
+    self.register::<ext::oestexturehalffloatlinear::OESTextureHalfFloatLinear>();
+    self.register::<ext::oesvertexarrayobject::OESVertexArrayObject>();
+}*/
 
 #[derive(Eq, Hash, PartialEq)]
 struct Bytes<'a>(&'a str);

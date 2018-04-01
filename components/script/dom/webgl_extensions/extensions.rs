@@ -90,6 +90,7 @@ impl WebGLExtensionFeatures {
 #[must_root]
 #[derive(JSTraceable, MallocSizeOf)]
 pub struct WebGLExtensions {
+    //HashMap to phf map
     extensions: DomRefCell<HashMap<String, Box<WebGLExtensionWrapper>>>,
     features: DomRefCell<WebGLExtensionFeatures>,
     webgl_version: WebGLVersion,
